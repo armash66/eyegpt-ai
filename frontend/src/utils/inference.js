@@ -18,7 +18,7 @@ export async function loadCalibration() {
   try {
     const r = await fetch("/calibration.json");
     if (r.ok) calibrationCache = await r.json();
-  } catch (_) {}
+  } catch (_) { }
   return calibrationCache;
 }
 
@@ -149,13 +149,16 @@ export async function runInference(file, options = {}) {
       calibration,
       modelUsed,
     });
-  } catch (_) {
+  } catch (err) {
+    console.warn("Inference failed, falling back to mock:", err);
     const fallback = runFallbackInference(file);
     const probs = CLASS_NAMES.map((c) => fallback.probabilities.find((p) => p.label === c)?.value ?? 0);
     return buildResultFromProbs(probs, fallback.mode || "mock", heatmapUrl, {
       qualityScore,
       calibration,
       modelUsed: "fallback",
+      error: err.message
     });
   }
 }
+
